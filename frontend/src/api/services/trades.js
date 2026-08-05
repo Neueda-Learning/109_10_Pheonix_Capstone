@@ -5,12 +5,8 @@ import { mockStore } from '../mock/store';
 export async function getTrades(customerId) {
   if (USE_MOCK) { await delay(300); return mockStore.getTrades(customerId); }
   /* istanbul ignore next */
-  try {
-    const { data } = await client.get(`/customers/${customerId}/trades`);
-    return data;
-  } catch {
-    return [];
-  }
+  const { data } = await client.get(`/customers/${customerId}/trades`);
+  return data;
 }
 
 export async function sellInvestment(investmentId, payload) {
@@ -19,10 +15,6 @@ export async function sellInvestment(investmentId, payload) {
     return mockStore.sellInvestment(investmentId, payload.quantity, payload.sellPrice, payload.tradeDate);
   }
   /* istanbul ignore next */
-  try {
-    const { data } = await client.post(`/investments/${investmentId}/sell`, payload);
-    return data;
-  } catch {
-    throw new Error('Sell transactions are not available in the current backend.');
-  }
+  const { data } = await client.post(`/investments/${investmentId}/sell`, payload);
+  return data;
 }

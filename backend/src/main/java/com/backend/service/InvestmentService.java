@@ -19,10 +19,13 @@ public class InvestmentService {
 
     private final InvestmentRepository investmentRepository;
     private final PortfolioRepository portfolioRepository;
+    private final TradeService tradeService;
 
-    public InvestmentService(InvestmentRepository investmentRepository, PortfolioRepository portfolioRepository) {
+    public InvestmentService(InvestmentRepository investmentRepository, PortfolioRepository portfolioRepository,
+                             TradeService tradeService) {
         this.investmentRepository = investmentRepository;
         this.portfolioRepository = portfolioRepository;
+        this.tradeService = tradeService;
     }
 
     @Transactional(readOnly = true)
@@ -48,7 +51,9 @@ public class InvestmentService {
         investment.setPortfolio(portfolio);
         applyRequest(investment, request);
 
-        return toResponseDTO(investmentRepository.save(investment));
+        Investment saved = investmentRepository.save(investment);
+        tradeService.recordBuyTrade(saved);
+        return toResponseDTO(saved);
     }
 
     @Transactional

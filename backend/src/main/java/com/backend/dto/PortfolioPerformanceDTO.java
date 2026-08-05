@@ -1,6 +1,7 @@
 package com.backend.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class PortfolioPerformanceDTO {
 
@@ -10,18 +11,21 @@ public class PortfolioPerformanceDTO {
     private BigDecimal currentValue;
     private BigDecimal profitLoss;
     private double returnPercentage;
+    private List<PerformancePointDTO> performanceSeries;
 
     public PortfolioPerformanceDTO() {
     }
 
     public PortfolioPerformanceDTO(Long customerId, String customerName, BigDecimal totalInvestment,
-                                    BigDecimal currentValue, BigDecimal profitLoss, double returnPercentage) {
+                                    BigDecimal currentValue, BigDecimal profitLoss, double returnPercentage,
+                                    List<PerformancePointDTO> performanceSeries) {
         this.customerId = customerId;
         this.customerName = customerName;
         this.totalInvestment = totalInvestment;
         this.currentValue = currentValue;
         this.profitLoss = profitLoss;
         this.returnPercentage = returnPercentage;
+        this.performanceSeries = performanceSeries;
     }
 
     public Long getCustomerId() {
@@ -70,5 +74,13 @@ public class PortfolioPerformanceDTO {
 
     public void setReturnPercentage(double returnPercentage) {
         this.returnPercentage = returnPercentage;
+    }
+
+    public List<PerformancePointDTO> getPerformanceSeries() {
+        return performanceSeries;
+    }
+
+    public void setPerformanceSeries(List<PerformancePointDTO> performanceSeries) {
+        this.performanceSeries = performanceSeries;
     }
 }

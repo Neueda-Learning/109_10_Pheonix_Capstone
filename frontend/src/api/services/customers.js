@@ -43,7 +43,7 @@ export async function deleteCustomer(id) {
 export async function getPortfolio(customerId) {
   if (USE_MOCK) { await delay(200); return mockStore.getPortfolio(customerId); }
   /* istanbul ignore next */
-  const { data } = await client.get(`/customers/${customerId}/performance`);
+  const { data } = await client.get(`/customers/${customerId}/portfolio`);
   /* istanbul ignore next */
   return data;
 }

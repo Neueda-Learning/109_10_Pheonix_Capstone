@@ -2,7 +2,10 @@ package com.backend.controller;
 
 import com.backend.dto.InvestmentRequestDTO;
 import com.backend.dto.InvestmentResponseDTO;
+import com.backend.dto.SellInvestmentRequestDTO;
+import com.backend.dto.TradeResponseDTO;
 import com.backend.service.InvestmentService;
+import com.backend.service.TradeService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,10 +35,12 @@ import java.util.List;
 public class InvestmentController {
 
     private final InvestmentService investmentService;
+    private final TradeService tradeService;
     private final ObjectMapper objectMapper;
 
-    public InvestmentController(InvestmentService investmentService, ObjectMapper objectMapper) {
+    public InvestmentController(InvestmentService investmentService, TradeService tradeService, ObjectMapper objectMapper) {
         this.investmentService = investmentService;
+        this.tradeService = tradeService;
         this.objectMapper = objectMapper;
     }
 
@@ -162,6 +167,26 @@ public class InvestmentController {
         investmentService.deleteInvestment(id);
         return ResponseEntity.noContent().build();
     }
+
+        @PostMapping(value = "/investments/{id}/sell", consumes = MediaType.APPLICATION_JSON_VALUE)
+        @Operation(summary = "Sell investment", description = "Sells part or all of an investment and records a sell trade")
+        @Parameter(name = "id", description = "Investment ID", required = true)
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            description = "Sell details",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = SellInvestmentRequestDTO.class))
+        )
+        @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sell trade recorded",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = TradeResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid sell request", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Investment not found", content = @Content)
+        })
+        public TradeResponseDTO sellInvestment(@PathVariable Long id, @Valid @RequestBody SellInvestmentRequestDTO request) {
+        return tradeService.sellInvestment(id, request);
+        }
 
     private InvestmentRequestDTO parseRequest(String requestBody) {
         try {

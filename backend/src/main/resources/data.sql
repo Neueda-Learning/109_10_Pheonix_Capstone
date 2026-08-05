@@ -16,6 +16,17 @@ INSERT INTO customer (name, email, phone, risk_profile, investment_goal) VALUES
 ('Rohit Joshi', 'rohit.joshi@gmail.com', '9876543218', 'Aggressive', 'Early Retirement'),
 ('Ananya Das', 'ananya.das@gmail.com', '9876543219', 'Moderate', 'Tax Saving');
 
+UPDATE customer SET notes = 'Prefers diversified equity exposure.', status = 'Active' WHERE id = 1;
+UPDATE customer SET notes = 'Focus on stable income assets.', status = 'Active' WHERE id = 2;
+UPDATE customer SET notes = 'Very low risk tolerance.', status = 'Active' WHERE id = 3;
+UPDATE customer SET notes = 'Growth-oriented, open to sector bets.', status = 'Active' WHERE id = 4;
+UPDATE customer SET notes = 'Targets education fund over 7 years.', status = 'Active' WHERE id = 5;
+UPDATE customer SET notes = 'Aggressive growth with periodic rebalancing.', status = 'Active' WHERE id = 6;
+UPDATE customer SET notes = 'Income plus moderate growth mix.', status = 'Active' WHERE id = 7;
+UPDATE customer SET notes = 'Prefers capital preservation.', status = 'Active' WHERE id = 8;
+UPDATE customer SET notes = 'Long horizon, high conviction positions.', status = 'Active' WHERE id = 9;
+UPDATE customer SET notes = 'Tax planning focused.', status = 'Archived' WHERE id = 10;
+
 -- =========================
 -- PORTFOLIOS
 -- =========================
@@ -23,6 +34,22 @@ INSERT INTO customer (name, email, phone, risk_profile, investment_goal) VALUES
 INSERT INTO portfolio (customer_id) VALUES
 (1),(2),(3),(4),(5),
 (6),(7),(8),(9),(10);
+
+-- =========================
+-- TARGET ALLOCATIONS
+-- =========================
+
+INSERT INTO customer_target_allocation (customer_id, asset_type, target_percentage) VALUES
+(1,'Stocks',60.00),(1,'Bonds',10.00),(1,'Cash',10.00),(1,'Others',20.00),
+(2,'Stocks',45.00),(2,'Bonds',20.00),(2,'Cash',10.00),(2,'Others',25.00),
+(3,'Stocks',20.00),(3,'Bonds',55.00),(3,'Cash',25.00),(3,'Others',0.00),
+(4,'Stocks',75.00),(4,'Bonds',10.00),(4,'Cash',10.00),(4,'Others',5.00),
+(5,'Stocks',50.00),(5,'Bonds',20.00),(5,'Cash',10.00),(5,'Others',20.00),
+(6,'Stocks',70.00),(6,'Bonds',10.00),(6,'Cash',10.00),(6,'Others',10.00),
+(7,'Stocks',40.00),(7,'Bonds',30.00),(7,'Cash',10.00),(7,'Others',20.00),
+(8,'Stocks',15.00),(8,'Bonds',60.00),(8,'Cash',10.00),(8,'Others',15.00),
+(9,'Stocks',80.00),(9,'Bonds',5.00),(9,'Cash',10.00),(9,'Others',5.00),
+(10,'Stocks',20.00),(10,'Bonds',10.00),(10,'Cash',10.00),(10,'Others',60.00);
 
 -- =========================
 -- INVESTMENTS
@@ -101,3 +128,16 @@ VALUES
 (10,'Infosys','Stock','INFY',22,1450,1680,'2023-06-05'),
 (10,'Gold ETF','ETF','GOLDBEES',45,58,71,'2024-01-12'),
 (10,'Nifty ETF','ETF','NIFTYBEES',90,225,278,'2023-08-08');
+
+-- =========================
+-- TRADES
+-- =========================
+
+INSERT INTO trade
+(portfolio_id, customer_id, investment_id, asset_name, asset_type, ticker, trade_type, quantity, price, trade_date, realised_pl)
+VALUES
+(1, 1, 1, 'Reliance Industries', 'Stock', 'RELIANCE', 'Buy', 25, 2450, '2023-02-14', NULL),
+(1, 1, 2, 'TCS', 'Stock', 'TCS', 'Buy', 18, 3250, '2022-08-10', NULL),
+(1, 1, 1, 'Reliance Industries', 'Stock', 'RELIANCE', 'Sell', 5, 3050, '2024-02-20', 3000.00),
+(2, 2, 6, 'ICICI Prudential Bluechip Fund', 'Mutual Fund', 'ICICIBLUE', 'Buy', 150, 62, '2022-05-15', NULL),
+(2, 2, 7, 'Infosys', 'Stock', 'INFY', 'Buy', 25, 1420, '2023-03-21', NULL);

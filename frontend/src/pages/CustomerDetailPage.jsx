@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+﻿import { lazy, Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Pencil, Trash2, TrendingUp, TrendingDown, DollarSign, ChevronRight, History, Target } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
@@ -10,8 +10,6 @@ import SellForm from '../components/forms/SellForm';
 import EmptyState from '../components/ui/EmptyState';
 import { SkeletonCard } from '../components/ui/Skeleton';
 import { Skeleton } from '../components/ui/Skeleton';
-import PerformanceChart from '../components/charts/PerformanceChart';
-import AllocationChart from '../components/charts/AllocationChart';
 import { getCustomer } from '../api/services/customers';
 import { getInvestmentsByCustomer, createInvestment, updateInvestment, deleteInvestment } from '../api/services/investments';
 import { getSuggestionsByCustomer } from '../api/services/suggestions';
@@ -19,6 +17,9 @@ import { getCustomerPerformance } from '../api/services/performance';
 import { getTrades, sellInvestment } from '../api/services/trades';
 import { formatCurrency, formatCurrencyPrecise, formatDate, formatReturnPct, formatPL, getInitials, calcInvestmentMetrics } from '../utils/formatters';
 import { useToast } from '../context/ToastContext';
+
+const PerformanceChart = lazy(() => import('../components/charts/PerformanceChart'));
+const AllocationChart = lazy(() => import('../components/charts/AllocationChart'));
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -76,7 +77,8 @@ export default function CustomerDetailPage() {
       .finally(() => setPerfLoading(false));
   }, [id, range]);
 
-  const stats = performance ?? { totalInvested: 0, currentValue: 0, profitLoss: 0, returnPercentage: 0 };
+  const stats = performance ?? { totalInvested: 0, totalInvestment: 0, currentValue: 0, profitLoss: 0, returnPercentage: 0 };
+  const totalInvested = stats.totalInvestment ?? stats.totalInvested ?? 0;
 
   // Count-up for P&L hero on data load — uses Date.now() to avoid shadowing the performance state var
   const [displayPL, setDisplayPL] = useState(0);
@@ -214,7 +216,7 @@ export default function CustomerDetailPage() {
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
                 <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>{customer.name}</h2>
-                <Badge label="Active" variant="success" />
+                <Badge label={customer.status === 'Archived' ? 'Archived' : 'Active'} variant={customer.status === 'Archived' ? 'warning' : 'success'} />
                 <Badge label={customer.riskProfile} />
               </div>
               <div className="detail-info-grid">
@@ -243,8 +245,8 @@ export default function CustomerDetailPage() {
               </div>
               <div className="pl-label">Unrealised Profit / Loss</div>
             </div>
-            <div className="pl-support">
-              <div><div className="pl-support-label">Total Invested</div><div className="pl-support-value">{formatCurrency(stats.totalInvested)}</div></div>
+              <div className="pl-support">
+              <div><div className="pl-support-label">Total Invested</div><div className="pl-support-value">{formatCurrency(totalInvested)}</div></div>
               <div><div className="pl-support-label">Current Value</div><div className="pl-support-value">{formatCurrency(stats.currentValue)}</div></div>
             </div>
           </div>
@@ -267,7 +269,7 @@ export default function CustomerDetailPage() {
           </div>
           {perfLoading
             ? <Skeleton height={220} style={{ borderRadius: 'var(--r-md)' }} />
-            : <PerformanceChart data={performance?.performanceSeries ?? []} />}
+            : <Suspense fallback={<Skeleton height={220} style={{ borderRadius: 'var(--r-md)' }} />}><PerformanceChart data={performance?.performanceSeries ?? []} /></Suspense>}
         </div>
       </GlassCard>
 
@@ -278,7 +280,7 @@ export default function CustomerDetailPage() {
             <div className="chart-card">
               <div className="chart-title">Asset Allocation</div>
               <div className="chart-subtitle">Current holdings distribution</div>
-              <AllocationChart data={customerAllocation} />
+              <Suspense fallback={<Skeleton height={200} style={{ borderRadius: 'var(--r-md)' }} />}><AllocationChart data={customerAllocation} /></Suspense>
             </div>
           </GlassCard>
           <GlassCard>

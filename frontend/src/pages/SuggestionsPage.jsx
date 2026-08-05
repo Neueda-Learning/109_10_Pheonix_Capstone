@@ -23,8 +23,9 @@ const SEV_ORDER = { High: 0, Medium: 1, Low: 2 };
 export default function SuggestionsPage() {
   const navigate = useNavigate();
   const [suggestions, setSuggestions] = useState([]);
-  const [customers,   setCustomers]   = useState([]);
+  const [customerNames, setCustomerNames] = useState({});
   const [loading,     setLoading]     = useState(true);
+  const [namesLoading, setNamesLoading] = useState(false);
   const [error,       setError]       = useState(null);
   const [filter,      setFilter]      = useState('All');
   const toast = useToast();
@@ -33,9 +34,8 @@ export default function SuggestionsPage() {
     setLoading(true);
     setError(null);
     try {
-      const [suggs, custs] = await Promise.all([getSuggestions(), getCustomers()]);
+      const suggs = await getSuggestions();
       setSuggestions(suggs);
-      setCustomers(custs);
     } catch (e) {
       setError(e.message);
       toast.error(e.message, 'Failed to load suggestions');
@@ -46,7 +46,47 @@ export default function SuggestionsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const custMap = Object.fromEntries(customers.map(c => [c.id, c.name]));
+  useEffect(() => {
+    if (loading || suggestions.length === 0) return undefined;
+
+    let cancelled = false;
+    setNamesLoading(true);
+
+    const schedule = window.requestIdleCallback
+      ? window.requestIdleCallback(async () => {
+          try {
+            const custs = await getCustomers();
+            if (!cancelled) {
+              setCustomerNames(Object.fromEntries(custs.map(c => [String(c.id), c.name])));
+            }
+          } catch {
+            if (!cancelled) setCustomerNames({});
+          } finally {
+            if (!cancelled) setNamesLoading(false);
+          }
+        })
+      : window.setTimeout(async () => {
+          try {
+            const custs = await getCustomers();
+            if (!cancelled) {
+              setCustomerNames(Object.fromEntries(custs.map(c => [String(c.id), c.name])));
+            }
+          } catch {
+            if (!cancelled) setCustomerNames({});
+          } finally {
+            if (!cancelled) setNamesLoading(false);
+          }
+        }, 120);
+
+    return () => {
+      cancelled = true;
+      if (window.cancelIdleCallback && typeof schedule === 'number') {
+        window.cancelIdleCallback(schedule);
+      } else {
+        window.clearTimeout(schedule);
+      }
+    };
+  }, [loading, suggestions]);
 
   const sorted = [...suggestions].sort((a, b) =>
     (SEV_ORDER[a.severity] ?? 9) - (SEV_ORDER[b.severity] ?? 9)
@@ -78,6 +118,7 @@ export default function SuggestionsPage() {
           {['All', 'High', 'Medium', 'Low'].map(sev => (
             <button
               key={sev}
+              type="button"
               className={`btn ${filter === sev ? 'btn-primary' : 'btn-secondary'} btn-sm`}
               onClick={() => setFilter(sev)}
               aria-pressed={filter === sev}
@@ -148,12 +189,13 @@ export default function SuggestionsPage() {
                   <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.65, marginBottom: 8 }}>
                     {s.message}
                   </p>
-                  {s.customerId && custMap[s.customerId] && (
+                  {s.customerId && (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
                       <div style={{ fontSize: 12, color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                        Client: <strong style={{ color: 'var(--text-secondary)' }}>{custMap[s.customerId]}</strong>
+                        Client: <strong style={{ color: 'var(--text-secondary)' }}>{customerNames[String(s.customerId)] ?? s.customerId}</strong>
                       </div>
                       <button
+                        type="button"
                         className="btn btn-secondary btn-sm"
                         style={{ gap: 6 }}
                         onClick={() => navigate(`/customers/${s.customerId}`)}
@@ -161,6 +203,9 @@ export default function SuggestionsPage() {
                         View Client <ArrowRight size={12} />
                       </button>
                     </div>
+                  )}
+                  {namesLoading && !customerNames[String(s.customerId)] && (
+                    <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 6 }}>Loading client names…</div>
                   )}
                 </div>
               </div>

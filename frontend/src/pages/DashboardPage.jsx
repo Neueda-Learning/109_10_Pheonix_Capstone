@@ -1,23 +1,26 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { Users, TrendingUp, IndianRupee, BarChart2 } from 'lucide-react';
 import StatCard from '../components/ui/StatCard';
 import GlassCard from '../components/ui/GlassCard';
-import AllocationChart from '../components/charts/AllocationChart';
-import PerformanceChart from '../components/charts/PerformanceChart';
 import { Skeleton } from '../components/ui/Skeleton';
 import { getDashboard } from '../api/services/dashboard';
 import { formatCurrency, formatReturnPct } from '../utils/formatters';
 import { useToast } from '../context/ToastContext';
 
+const AllocationChart = lazy(() => import('../components/charts/AllocationChart'));
+const PerformanceChart = lazy(() => import('../components/charts/PerformanceChart'));
+
 export default function DashboardPage() {
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
+  const [chartsReady, setChartsReady] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setChartsReady(false);
     getDashboard()
       .then(d => { if (!cancelled) { setData(d); setLoading(false); } })
       .catch(e => {
@@ -29,6 +32,24 @@ export default function DashboardPage() {
       });
     return () => { cancelled = true; };
   }, [toast]);
+
+  useEffect(() => {
+    if (loading) return undefined;
+
+    let cancelled = false;
+    const schedule = window.requestIdleCallback
+      ? window.requestIdleCallback(() => { if (!cancelled) setChartsReady(true); })
+      : window.setTimeout(() => { if (!cancelled) setChartsReady(true); }, 120);
+
+    return () => {
+      cancelled = true;
+      if (window.cancelIdleCallback && typeof schedule === 'number') {
+        window.cancelIdleCallback(schedule);
+      } else {
+        window.clearTimeout(schedule);
+      }
+    };
+  }, [loading]);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -67,8 +88,6 @@ export default function DashboardPage() {
           icon={<Users size={18} />}
           iconBg="var(--info-bg)"
           iconColor="var(--info)"
-          delta={loading ? undefined : 8.3}
-          deltaLabel="vs last quarter"
         />
         <StatCard
           label="Assets Managed"
@@ -76,8 +95,6 @@ export default function DashboardPage() {
           icon={<IndianRupee size={18} />}
           iconBg="var(--primary-subtle)"
           iconColor="var(--primary)"
-          delta={loading ? undefined : 12.1}
-          deltaLabel="vs last quarter"
         />
         <StatCard
           label="Portfolio Value"
@@ -94,8 +111,6 @@ export default function DashboardPage() {
           icon={<BarChart2 size={18} />}
           iconBg="var(--warning-bg)"
           iconColor="var(--warning)"
-          delta={loading ? undefined : 2.4}
-          deltaLabel="vs last month"
         />
       </div>
 
@@ -106,9 +121,9 @@ export default function DashboardPage() {
           <div className="chart-card">
             <div className="chart-title">Asset Allocation</div>
             <div className="chart-subtitle">Distribution across asset classes</div>
-            {loading
+            {loading || !chartsReady
               ? <Skeleton height={200} style={{ borderRadius: 'var(--r-lg)' }} />
-              : <AllocationChart data={data?.allocation ?? []} />
+              : <Suspense fallback={<Skeleton height={200} style={{ borderRadius: 'var(--r-lg)' }} />}><AllocationChart data={data?.allocation ?? []} /></Suspense>
             }
           </div>
         </GlassCard>
@@ -118,9 +133,9 @@ export default function DashboardPage() {
           <div className="chart-card">
             <div className="chart-title">Portfolio Performance</div>
             <div className="chart-subtitle">Total portfolio value over time</div>
-            {loading
+            {loading || !chartsReady
               ? <Skeleton height={220} style={{ borderRadius: 'var(--r-lg)' }} />
-              : <PerformanceChart data={data?.performanceTrend ?? []} />
+              : <Suspense fallback={<Skeleton height={220} style={{ borderRadius: 'var(--r-lg)' }} />}><PerformanceChart data={data?.performanceTrend ?? []} /></Suspense>
             }
           </div>
         </GlassCard>

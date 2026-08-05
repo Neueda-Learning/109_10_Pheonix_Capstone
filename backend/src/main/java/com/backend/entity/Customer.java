@@ -7,11 +7,14 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "customer")
@@ -36,11 +39,20 @@ public class Customer {
     @Column(name = "investment_goal", length = 255)
     private String investmentGoal;
 
+    @Column(name = "notes")
+    private String notes;
+
+    @Column(name = "status", length = 20)
+    private String status;
+
     @Column(name = "created_date", updatable = false)
     private LocalDateTime createdDate;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Portfolio portfolio;
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CustomerTargetAllocation> targetAllocations = new ArrayList<>();
 
     public Customer() {
     }
@@ -48,6 +60,9 @@ public class Customer {
     @PrePersist
     protected void onCreate() {
         createdDate = LocalDateTime.now();
+        if (status == null || status.isBlank()) {
+            status = "Active";
+        }
     }
 
     public Long getId() {
@@ -98,6 +113,22 @@ public class Customer {
         this.investmentGoal = investmentGoal;
     }
 
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public LocalDateTime getCreatedDate() {
         return createdDate;
     }
@@ -112,5 +143,13 @@ public class Customer {
 
     public void setPortfolio(Portfolio portfolio) {
         this.portfolio = portfolio;
+    }
+
+    public List<CustomerTargetAllocation> getTargetAllocations() {
+        return targetAllocations;
+    }
+
+    public void setTargetAllocations(List<CustomerTargetAllocation> targetAllocations) {
+        this.targetAllocations = targetAllocations;
     }
 }

@@ -33,7 +33,7 @@ const computePL = (customerId) => {
   const currentValue     = invs.reduce((s, i) => s + i.quantity * i.currentPrice, 0);
   const profitLoss       = currentValue - totalInvested;
   const returnPercentage = totalInvested > 0 ? (profitLoss / totalInvested) * 100 : 0;
-  return { totalInvested, currentValue, profitLoss, returnPercentage };
+  return { totalInvested, totalInvestment: totalInvested, currentValue, profitLoss, returnPercentage };
 };
 
 export const mockStore = {

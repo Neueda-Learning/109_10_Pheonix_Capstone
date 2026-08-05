@@ -66,7 +66,12 @@ public class PortfolioService {
     }
 
     @Transactional(readOnly = true)
-    public PortfolioPerformanceDTO getPerformance(Long customerId) {
+        public PortfolioPerformanceDTO getPerformance(Long customerId) {
+                return getPerformance(customerId, "6M");
+        }
+
+        @Transactional(readOnly = true)
+        public PortfolioPerformanceDTO getPerformance(Long customerId, String range) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
 
@@ -75,9 +80,10 @@ public class PortfolioService {
         BigDecimal currentValue = currentValue(investments);
         BigDecimal profitLoss = currentValue.subtract(totalInvestment);
         double returnPercentage = returnPercentage(totalInvestment, profitLoss);
+                List<PerformancePointDTO> performanceSeries = buildPerformanceTrend(investments, range);
 
         return new PortfolioPerformanceDTO(customerId, customer.getName(), totalInvestment, currentValue,
-                profitLoss, returnPercentage);
+                                profitLoss, returnPercentage, performanceSeries);
     }
 
     @Transactional(readOnly = true)
@@ -92,7 +98,7 @@ public class PortfolioService {
         DashboardSummaryDTO summary = new DashboardSummaryDTO(customerRepository.count(), totalAssetsManaged,
                 portfolioValue, overallProfitLoss, returnPercentage);
 
-        return new DashboardResponseDTO(summary, buildAllocation(allInvestments), buildPerformanceTrend(allInvestments));
+                return new DashboardResponseDTO(summary, buildAllocation(allInvestments), buildPerformanceTrend(allInvestments));
     }
 
     @Transactional(readOnly = true)
@@ -121,23 +127,49 @@ public class PortfolioService {
         return allocation;
     }
 
-    private List<PerformancePointDTO> buildPerformanceTrend(List<Investment> investments) {
+        private List<PerformancePointDTO> buildPerformanceTrend(List<Investment> investments) {
+                return buildPerformanceTrend(investments, "6M");
+        }
+
+        private List<PerformancePointDTO> buildPerformanceTrend(List<Investment> investments, String range) {
         List<PerformancePointDTO> trend = new ArrayList<>();
         LocalDate today = LocalDate.now();
+                int count = performancePointCount(range);
 
-        for (int i = 5; i >= 0; i--) {
-            LocalDate monthEnd = today.minusMonths(i);
+                for (int i = count - 1; i >= 0; i--) {
+                        LocalDate monthEnd = today.minusMonths(i);
             BigDecimal value = investments.stream()
                     .filter(inv -> inv.getPurchaseDate() != null && !inv.getPurchaseDate().isAfter(monthEnd))
                     .map(inv -> inv.getQuantity().multiply(inv.getCurrentPrice()))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            String label = monthEnd.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+                        String label = performanceLabel(range, monthEnd, count - 1 - i);
             trend.add(new PerformancePointDTO(label, value));
         }
 
         return trend;
     }
+
+        private int performancePointCount(String range) {
+                return switch (range) {
+                        case "1M" -> 15;
+                        case "3M" -> 12;
+                        case "6M" -> 6;
+                        case "1Y" -> 12;
+                        case "All" -> 24;
+                        default -> 6;
+                };
+        }
+
+        private String performanceLabel(String range, LocalDate monthEnd, int index) {
+                if ("1M".equals(range)) {
+                        return monthEnd.getDayOfMonth() + "/" + monthEnd.getMonthValue();
+                }
+                if ("3M".equals(range)) {
+                        return "W" + (index + 1);
+                }
+                return monthEnd.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+        }
 
     private BigDecimal totalInvestment(List<Investment> investments) {
         return investments.stream()
