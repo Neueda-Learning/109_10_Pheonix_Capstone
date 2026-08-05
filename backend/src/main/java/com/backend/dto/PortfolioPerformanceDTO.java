@@ -1,6 +1,7 @@
 package com.backend.dto;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 
 public class PortfolioPerformanceDTO {
@@ -26,6 +27,12 @@ public class PortfolioPerformanceDTO {
         this.profitLoss = profitLoss;
         this.returnPercentage = returnPercentage;
         this.performanceSeries = performanceSeries;
+    }
+
+    public PortfolioPerformanceDTO(Long customerId, String customerName, BigDecimal totalInvestment,
+                                    BigDecimal currentValue, BigDecimal profitLoss, double returnPercentage) {
+        this(customerId, customerName, totalInvestment, currentValue, profitLoss, returnPercentage,
+                Collections.emptyList());
     }
 
     public Long getCustomerId() {

@@ -2,6 +2,7 @@ package com.backend.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Map;
 
 public class CustomerResponseDTO {
@@ -45,6 +46,15 @@ public class CustomerResponseDTO {
         this.profitLoss = profitLoss;
         this.returnPercentage = returnPercentage;
         this.targetAllocation = targetAllocation;
+    }
+
+    public CustomerResponseDTO(Long id, String name, String email, String phone, String riskProfile,
+                                String investmentGoal, LocalDateTime joinedDate,
+                                BigDecimal portfolioValue, BigDecimal totalInvestment,
+                                BigDecimal currentValue, BigDecimal profitLoss, double returnPercentage) {
+        this(id, name, email, phone, riskProfile, investmentGoal, null, joinedDate, "ACTIVE",
+                portfolioValue, totalInvestment, currentValue, profitLoss, returnPercentage,
+                Collections.emptyMap());
     }
 
     public Long getId() {
