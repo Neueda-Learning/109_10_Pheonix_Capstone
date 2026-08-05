@@ -3,6 +3,7 @@ package com.backend.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CustomerResponseDTO {
@@ -55,6 +56,12 @@ public class CustomerResponseDTO {
         this(id, name, email, phone, riskProfile, investmentGoal, null, joinedDate, "ACTIVE",
                 portfolioValue, totalInvestment, currentValue, profitLoss, returnPercentage,
                 Collections.emptyMap());
+    }
+
+    public CustomerResponseDTO(Long id, String name, String email, String phone, String riskProfile) {
+        this(id, name, email, phone, riskProfile, "", null, LocalDateTime.now(), "ACTIVE",
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, 0.0,
+                new LinkedHashMap<>());
     }
 
     public Long getId() {
