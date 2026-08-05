@@ -64,6 +64,13 @@ public class CustomerResponseDTO {
                 new LinkedHashMap<>());
     }
 
+    public CustomerResponseDTO(Long id, String name, String email, String phone, String riskProfile,
+                                String investmentGoal) {
+        this(id, name, email, phone, riskProfile, investmentGoal, null, LocalDateTime.now(), "ACTIVE",
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, 0.0,
+                new LinkedHashMap<>());
+    }
+
     public Long getId() {
         return id;
     }
